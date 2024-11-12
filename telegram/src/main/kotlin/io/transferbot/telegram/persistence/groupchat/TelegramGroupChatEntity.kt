@@ -23,12 +23,16 @@ class TelegramGroupChatEntity(
     val user: UserEntity,
 )
 
-fun TelegramGroupChatEntity.toDomain() = GroupChat(name, key.telegramGroupChatId.toString(), user.toDomain())
+fun TelegramGroupChatEntity.toDomain() = GroupChat(
+    name = name,
+    platformId = key.telegramGroupChatId.toString(),
+    user = user.toDomain()
+)
 
 fun GroupChat.toEntity() = TelegramGroupChatEntity(
-    name,
-    VkGroupChatKey(user.platformId!!.toLong(), platformId.toLong()),
-    user.toEntity()
+    name = name,
+    key = VkGroupChatKey(user.platformId!!.toLong(), platformId.toLong()),
+    user = user.toEntity()
 )
 
 @Embeddable
