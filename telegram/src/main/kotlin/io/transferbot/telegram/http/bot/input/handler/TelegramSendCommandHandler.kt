@@ -12,6 +12,9 @@ import io.transferbot.telegram.http.bot.model.TelegramAttachmentModel
 import io.transferbot.telegram.http.bot.model.TelegramGetMediaGroupModel
 import io.transferbot.telegram.http.bot.model.TelegramMessageModel
 import io.transferbot.telegram.http.bot.output.ITelegramService
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.name
@@ -53,10 +56,11 @@ class TelegramSendCommandHandler(
         return attachment
     }
 
-    private suspend fun getAttachments(messageId: Long, chatId: Long, mediaGroupId: Long): List<AttachmentDto> {
-        val messages = telegramService.getMediaGroup(TelegramGetMediaGroupModel(chatId, messageId, mediaGroupId))
-        return messages.map { getAttachment(it.attachment!!) }
-    }
+    private suspend fun getAttachments(messageId: Long, chatId: Long, mediaGroupId: Long): List<AttachmentDto> =
+        coroutineScope {
+            val messages = telegramService.getMediaGroup(TelegramGetMediaGroupModel(chatId, messageId, mediaGroupId))
+            messages.map { async { getAttachment(it.attachment!!) } }.awaitAll()
+        }
 
     override fun handle(args: String, message: TelegramMessageModel) {
         try {
