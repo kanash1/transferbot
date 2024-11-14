@@ -12,12 +12,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import org.springframework.context.ApplicationContext
 import org.springframework.stereotype.Component
 
 @Component
 class TelegramUpdateController(
-    private val context: ApplicationContext,
     commandHandlerFactories: List<ICommandHandlerFactory<TelegramMessageModel>>
 ) {
     private val log = KotlinLogging.logger { }
@@ -31,6 +29,7 @@ class TelegramUpdateController(
     }
 
     fun onUpdate(update: TdApi.UpdateNewMessage) {
+        log.info { update }
         coroutineScope.launch {
             try {
                 val tgMessageDto = update.message.toDto()
@@ -46,7 +45,7 @@ class TelegramUpdateController(
                     commandToHandlerFactory[command]!!.createHandler(chatId.toString()).handle(commandArgs, this)
                 }
             } catch (e: Exception) {
-                log.debug { e.message }
+                log.info { e.message }
             }
         }
     }
