@@ -38,7 +38,7 @@ class TelegramService(
     private suspend fun sendTextMessage(text: String, chatId: Long) {
         try {
             val inputContent = TdApi.InputMessageText(TdApi.FormattedText(text, null), null, true)
-            tdLib.client.send(TdApi.SendMessage(chatId, 0, null, null, null, inputContent))
+            tdLib.client.send(TdApi.SendMessage(chatId, 0, null, null, null, inputContent)).await()
         } catch (e: TelegramError) {
             log.error { e.message }
             throw TelegramApiException(e.message, e)
@@ -48,7 +48,7 @@ class TelegramService(
     private suspend fun sendFileMessage(caption: String, attachment: AttachmentDto, chatId: Long) {
         try {
             val inputContent = attachment.toInputMediaContent(caption)
-            tdLib.client.send(TdApi.SendMessage(chatId, 0, null, null, null, inputContent))
+            tdLib.client.send(TdApi.SendMessage(chatId, 0, null, null, null, inputContent)).await()
         } catch (e: TelegramError) {
             log.error { e.message }
             throw TelegramApiException(e.message, e)
