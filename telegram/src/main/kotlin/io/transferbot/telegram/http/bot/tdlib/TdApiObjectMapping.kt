@@ -5,12 +5,12 @@ import io.transferbot.core.application.dto.AttachmentType
 import io.transferbot.core.application.dto.ChatType
 import io.transferbot.shared.exception.UnsupportedChatTypeException
 import io.transferbot.shared.exception.UnsupportedMediaException
+import io.transferbot.shared.util.toFile
 import io.transferbot.telegram.http.bot.model.TelegramAttachmentModel
 import io.transferbot.telegram.http.bot.model.TelegramMessageModel
 import it.tdlight.jni.TdApi
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
-import kotlin.io.path.createTempFile
 
 fun TdApi.Message.toDto(): TelegramMessageModel {
     var text = ""
@@ -63,18 +63,17 @@ fun TdApi.Message.toDto(): TelegramMessageModel {
 fun AttachmentDto.toInputMediaContent(caption: String? = null): TdApi.InputMessageContent {
     val formattedText: TdApi.FormattedText? = caption?.let { TdApi.FormattedText(it, null) }
 
+    val file = toFile()
+
     when (type) {
         AttachmentType.PHOTO -> {
-            val filePath = createTempFile(suffix = ".jpg")
-            val tmpFile = filePath.toFile()
-            tmpFile.writeBytes(file!!)
-            val bimg: BufferedImage = ImageIO.read(tmpFile)
+            val img: BufferedImage = ImageIO.read(file)
             return TdApi.InputMessagePhoto(
-                TdApi.InputFileLocal(tmpFile.absolutePath),
+                TdApi.InputFileLocal(file.absolutePath),
                 null,
                 IntArray(0),
-                bimg.width,
-                bimg.height,
+                img.width,
+                img.height,
                 formattedText,
                 null,
                 false
@@ -82,13 +81,8 @@ fun AttachmentDto.toInputMediaContent(caption: String? = null): TdApi.InputMessa
         }
 
         AttachmentType.FILE -> {
-            val docNameLen = name?.length ?: 0
-            val lastDotIdx = name?.lastIndexOf('.') ?: docNameLen
-            val tmpFilePath = createTempFile(suffix = name?.substring(lastDotIdx, docNameLen))
-            val tmpFile = tmpFilePath.toFile()
-            tmpFile.writeBytes(file!!)
             return TdApi.InputMessageDocument(
-                TdApi.InputFileLocal(tmpFile.absolutePath),
+                TdApi.InputFileLocal(file.absolutePath),
                 null,
                 true,
                 formattedText
